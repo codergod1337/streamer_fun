@@ -8,6 +8,7 @@ import io.github.codergod1337.streamplay.model.UserGroupAllocation;
 import io.github.codergod1337.streamplay.repository.UserGroupRepository;
 import io.github.codergod1337.streamplay.repository.UserRepository;
 import io.github.codergod1337.streamplay.repository.UserGroupAllocationRepository;
+import io.github.codergod1337.streamplay.service.AuthService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -21,13 +22,17 @@ public class DatabaseInitializer implements CommandLineRunner {
     private final UserGroupRepository userGroupRepository;
     private final UserRepository userRepository;
     private final UserGroupAllocationRepository userGroupAllocationRepository;
+    private final AuthService authService;
+
     @Value("${admin.password}")
     private String adminPassword;
 
-    public DatabaseInitializer(UserGroupRepository userGroupRepository, UserRepository userRepository, UserGroupAllocationRepository userGroupAllocationRepository) {
+
+    public DatabaseInitializer(UserGroupRepository userGroupRepository, UserRepository userRepository, UserGroupAllocationRepository userGroupAllocationRepository, AuthService authService) {
         this.userGroupRepository = userGroupRepository;
         this.userRepository = userRepository;
         this.userGroupAllocationRepository = userGroupAllocationRepository;
+        this.authService = authService;
     }
     @Override
     public void run(String... args) {
@@ -47,10 +52,10 @@ public class DatabaseInitializer implements CommandLineRunner {
         }
 
         // 2. Admin-User anlegen
-        User adminUser = userRepository.findByUsername("admin")
+        User adminUser = userRepository.findByUserName("admin")
                 .orElseGet(() -> {
                     User u = new User();
-                    u.setUsername("admin");
+                    u.setUserName("admin");
                     u.setPassword(adminPassword); // Nur für Entwicklung – später Passwort hashen!
                     return userRepository.save(u);
                 });
@@ -70,6 +75,8 @@ public class DatabaseInitializer implements CommandLineRunner {
             userGroupAllocationRepository.save(userGroupAllocation);
         }
 
-
+        // test Token generieren
+        String token = authService.authenticateAndCreateToken("admin", adminPassword, "127.0.0.1");
+        System.out.println("Test-Token für admin: \n\nBearer " + token + "\n");
     }
 }

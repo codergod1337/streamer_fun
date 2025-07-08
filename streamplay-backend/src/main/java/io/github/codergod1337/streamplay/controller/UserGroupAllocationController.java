@@ -68,7 +68,7 @@ public class UserGroupAllocationController {
         if (userOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        List<UserGroupAllocation> roles = userGroupAllocationService.findRolesByUser(userOpt.get());
+        List<UserGroupAllocation> roles = userGroupAllocationService.findAllUserGroupsByUser(userOpt.get());
         return ResponseEntity.ok(roles);
     }
 

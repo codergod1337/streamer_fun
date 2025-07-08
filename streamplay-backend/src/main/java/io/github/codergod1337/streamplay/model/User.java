@@ -18,7 +18,7 @@ public class User {
 
     @NotBlank
     @Column(unique = true, nullable = false)
-    private String username;
+    private String userName;
 
 
     @NotBlank

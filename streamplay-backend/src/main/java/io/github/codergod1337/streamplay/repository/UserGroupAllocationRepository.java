@@ -9,7 +9,7 @@ import java.util.List;
 
 @Repository
 public interface UserGroupAllocationRepository extends JpaRepository<UserGroupAllocation, Long> {
-    List<UserGroupAllocation> findAllByUser(User user);
+    List<UserGroupAllocation> findAllByUser(User user); // not optional, because every user has at least one Role!
     boolean existsByUserAndUserGroup_GroupCode(User user, String groupCode);
 
 }

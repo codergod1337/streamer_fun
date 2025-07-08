@@ -1,6 +1,7 @@
 package io.github.codergod1337.streamplay.controller;
 
 
+import io.github.codergod1337.streamplay.dto.UserNameRequest;
 import io.github.codergod1337.streamplay.model.User;
 import io.github.codergod1337.streamplay.service.UserService;
 import jakarta.validation.Valid;
@@ -10,41 +11,48 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/user")
 @Validated
 public class UserController {
 
-    private final UserService service;
+    private final UserService userService;
 
     @Autowired
-    public UserController(UserService service) {
-        this.service = service;
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
     @PostMapping
     public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
-        User created = service.create(user);
+        User created = userService.create(user);
         return ResponseEntity.ok(created);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<User> getUser(@PathVariable Long id) {
-        return service.findById(id)
+        return userService.findById(id)
                 .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+    @PostMapping("/name")
+    public ResponseEntity<User> getUserByUsername(@RequestBody UserNameRequest request) {
+        Optional<User> optionalUser = (Optional<User>) userService.findByUserName(request.getUserName());
+        return optionalUser.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping
     public ResponseEntity<List<User>> listUsers() {
-        List<User> all = service.findAll();
+        List<User> all = userService.findAll();
         return ResponseEntity.ok(all);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        service.delete(id);
+        userService.delete(id);
         return ResponseEntity.noContent().build();
     }
 }

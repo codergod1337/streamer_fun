@@ -30,63 +30,51 @@ import java.nio.charset.StandardCharsets;
 @PropertySource("file:${user.dir}/_CONFIDENTIAL/secret.properties")  // lädt jwt.secret aus externem File  // Aktiviert Spring Security
 public class SecurityConfig {
 
-    @Value("${jwt.secret}")
-    private String secret;
-    //private static final String SECRET = "lL4jQ1hDS25rNmYxb0hVTkVscE1qT2lXZ05EeVZCZ0E";
+    @Value("${jwt.secret:}")
+    private String secretProperty;
+    @Value("${jwt.key}")
+    private String jwtKey;
+
+    @Bean
+    public SecretKey jwtSecretKey(@Value("${jwt.secret}") String secret) {
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    }
+
+
+    @Bean
+    public JwtDecoder jwtDecoder(SecretKey jwtSecretKey) {
+        return NimbusJwtDecoder.withSecretKey(jwtSecretKey).build();
+    }
+
+    @Bean
+    public JwtEncoder jwtEncoder(SecretKey jwtSecretKey) {
+        OctetSequenceKey jwk = new OctetSequenceKey.Builder(jwtSecretKey)
+                .keyID(jwtKey) // explizite ID setzen
+                .algorithm(JWSAlgorithm.HS256)
+                .build();
+
+        JWKSource<SecurityContext> jwkSource = new ImmutableJWKSet<>(new JWKSet(jwk));
+        return new NimbusJwtEncoder(jwkSource);
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // a) stateless REST-API, kein CSRF
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                // b) Zugriffsregeln
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/v3/api-docs/**",    // OpenAPI-JSON
-                                "/swagger-ui.html",   // Swagger UI
-                                "/swagger-ui/**",     // Swagger UI Assets
-                                "/webjars/**",        // Webjar-Assets (falls genutzt)
-                                "/api/auth/**",       // Auth-Endpoints
-                                "/api/*"              // TEMP WILL BE REMOVED SOON ;)
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/webjars/**",
+                                "/api/auth/**",
+                                "/api/**"  // TEMPORÄR
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
-
-                // c) Resource Server: automatisch Bearer-Filter + JwtAuthenticationProvider
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(Customizer.withDefaults())
-                );
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
 
         return http.build();
     }
-
-    @Bean
-    public JwtDecoder jwtDecoder() {
-        SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        return NimbusJwtDecoder.withSecretKey(key).build();
-    }
-
-    @Bean
-    public JwtEncoder jwtEncoder() {
-        // 1) Baue SecretKey für HMAC-SHA256
-        SecretKey key = new SecretKeySpec(
-                secret.getBytes(StandardCharsets.UTF_8),
-                "HmacSHA256"
-        );
-
-        // 2) Wrappe ihn in einen JWK und markiere Algorithmus
-        OctetSequenceKey jwk = new OctetSequenceKey.Builder(key)
-                .algorithm(JWSAlgorithm.HS256)
-                .build();
-
-        // 3) Erzeuge eine JWK-Quelle aus diesem einen Key
-        JWKSource<SecurityContext> jwkSource =
-                new ImmutableJWKSet<>(new JWKSet(jwk));
-
-        // 4) Initialisiere und gib den NimbusJwtEncoder zurück
-        return new NimbusJwtEncoder(jwkSource);
-    }
-
 }

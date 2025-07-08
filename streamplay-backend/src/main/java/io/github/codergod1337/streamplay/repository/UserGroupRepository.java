@@ -10,6 +10,6 @@ import java.util.Optional;
 @Repository
 public interface UserGroupRepository extends JpaRepository<UserGroup, Long> {
 
-
+    Optional<UserGroup> findById(Long id);
     Optional<UserGroup> findByGroupCode(String roleAdmin);
 }

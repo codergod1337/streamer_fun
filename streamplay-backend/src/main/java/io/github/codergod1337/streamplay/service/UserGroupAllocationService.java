@@ -46,7 +46,7 @@ public class UserGroupAllocationService {
     /**
      * Alle Rollen eines Users abrufen.
      */
-    public List<UserGroupAllocation> findRolesByUser(User user) {
+    public List<UserGroupAllocation> findAllUserGroupsByUser(User user) {
         return repository.findAllByUser(user);
     }
 

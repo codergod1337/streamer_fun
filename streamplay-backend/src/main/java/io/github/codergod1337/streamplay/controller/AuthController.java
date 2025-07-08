@@ -1,7 +1,10 @@
 package io.github.codergod1337.streamplay.controller;
+import io.github.codergod1337.streamplay.dto.LoginRequest;
+import io.github.codergod1337.streamplay.service.AuthService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,29 +27,21 @@ import java.util.Date;
  * Controller für Authentifizierung und Token-Ausgabe
  */
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/jwt")
 public class AuthController {
 
-    private static final String SECRET = "lL4jQ1hDS25rNmYxb0hVTkVscE1qT2lXZ05EeVZCZ0E";
+    private final AuthService authService;
 
-    @GetMapping("/token")
-    public ResponseEntity<String> getToken() {
-        SecretKey key = Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
 
-        Instant now = Instant.now();
-        Date issuedAt  = Date.from(now);
-        Date expiresAt = Date.from(now.plusSeconds(3600));
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
 
-        // Builder mit claim(...) statt setSubject/etc. und signWith(key)
-        String jwt = Jwts.builder()
-                .claim("sub", "demo-user")
-                .claim("iss", "streamplay-backend")
-                .claim("iat", issuedAt)
-                .claim("exp", expiresAt)
-                .signWith(key)          // nutzt automatisch HS256
-                .compact();
-
-        return ResponseEntity.ok(jwt);
+    @PostMapping()
+    public ResponseEntity<String> getToken(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
+        String ip = request.getRemoteAddr();  // oder:   request.getHeader("X-Forwarded-For");
+        String token = authService.authenticateAndCreateToken(loginRequest.getUserName(), loginRequest.getPassword(), ip);
+        return ResponseEntity.ok(token);
     }
 
 }
