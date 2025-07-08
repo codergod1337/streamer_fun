@@ -1,0 +1,48 @@
+# --------------------------------------------------------------------------------------------------------------------
+# Docker Compose File Schema Version
+#
+# Die Angabe hier steuert nicht deine Docker Engine oder die Postgres-Version,
+# sondern definiert, welches Compose-File-Format und welche Features deine Datei nutzen darf.
+#
+# Version 3.8 ist das letzte Minor-Release im „3.x“-Zweig (Ende 2020 eingeführt) und unterstützt:
+#  • Volumes, Healthchecks, Secrets & Configs
+#  • Build-Optionen, Netzwerkkonfiguration
+#  • Swarm-Mode-Integrationen („docker stack“)
+#
+# Mit „3.8“ stellst man sicher, dass alle modernen Compose-Funktionalitäten bei
+# Docker Engine ≥19.03 und Compose CLI ≥1.27 zur Verfügung stehen.
+# --------------------------------------------------------------------------------------------------------------------
+version: '3.8'
+
+services:                           # Definition aller Container-Services
+  db:                               # Service-Name „db“ für die PostgreSQL-Datenbank
+    image: postgres:17.5-alpine      # Alpine Linux: sehr schlankes Basis-Image (~60 MB), schnellere Pull- & Start-Zeiten und geringere Angriffsfläche, ideal für schlanke Deployments
+    container_name: streamplay-db   # Fester Name für den Container (statt zufälliger ID)
+    environment:                    # Umgebungsvariablen für die Datenbank-Konfiguration
+      POSTGRES_DB: streamplay       # Name der anzulegenden Datenbank
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 123
+    ports:                          # Port-Mapping zwischen Host und Container
+      - "5432:5432"                 # Host-Port 5432 → Container-Port 5432
+    volumes:                        # Persistente Speicherung der Daten
+      # ---------------------------- Bind-Mount Erklärung ----------------------------
+      # Host-Verzeichnis "./data/postgres":
+      #   • Alle Postgres-Daten (WAL, Tabellen, Indizes, Konfiguration) landen hier
+      #   • Leicht einsehbar und versionierbar (z. B. nur Migrationsskripte, nicht die Binärdaten)
+      #   • Jeder, der das Repo klont, kann direkt mit exakt demselben Daten-Verzeichnis arbeiten
+      #
+      # Container-Pfad "/var/lib/postgresql/data":
+      #   • Standard-Datenverzeichnis von PostgreSQL im Container
+      #   • Postgres erwartet hier Schreibrechte und legt hier alle DB-Dateien an
+      #
+      # Zusammen sorgt dieser Bind-Mount dafür, dass die Datenbankdaten
+      # außerhalb des Container-Scopes auf deinem Host liegen und somit
+      # zwischen Container-Neustarts erhalten bleiben und reproduzierbar sind.
+      - ./data/postgres:/var/lib/postgresql/data
+
+volumes:
+  db-data:
+
+
+# command to init container:
+# cd G:\MyProjects\streamer_fun\streamplay-backend docker-compose up -d

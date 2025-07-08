@@ -1,0 +1,74 @@
+# --------------------------------------------------------------------------------------------------------------------
+# Application Configuration (YAML)
+# --------------------------------------------------------------------------------------------------------------------
+spring:
+  application:
+    name: streamplay-backend                          # Name deiner Spring-Anwendung
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/streamplay  # JDBC-URL zur Docker-Postgres-Datenbank
+    username: admin                                   # DB-User, muss mit Docker-Compose �bereinstimmen
+    password: 123                                     # DB-Passwort (in Prod bitte durch Secrets ersetzen)
+    driver-class-name: org.postgresql.Driver          # JDBC-Treiber-Klasse
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop           # Schema-Update beim Start (Dev: update, Prod: validate/none)
+    show-sql: true                    # SQL-Statements in Konsole loggen
+    properties:
+      hibernate:
+        format_sql: true              # Formatiertes, besser lesbares SQL
+        jdbc:
+          lob:
+            non_contextual_creation: true
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt: {}
+          # jwk-set-uri: http://localhost:6969/oauth2/jwks  # JWKS-Endpoint f�r JWT-Verifikation
+          # alternativ: secret-key: verySecretKey123!
+          # issuer-uri: https://idp.example.com/issuer
+  config:
+    import: file:./_CONFIDENTIAL/secret.properties
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env  # Actuator-Endpunkte freigeben
+  endpoint:
+    health:
+      show-details: always               # Health-Details immer anzeigen
+
+logging:
+  level:
+    root: INFO                          # Standard-Log-Level
+    org.springframework.web: DEBUG     # HTTP-Requests-log
+    io.github.codergod1337.streamplay: DEBUG  # eigenes Paket in DEBUG
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs                 # OpenAPI-Spec-Pfad
+  swagger-ui:
+    path: /swagger-ui.html             # Swagger-UI-Pfad
+
+
+server:
+  port: 6969                                        # Port, auf dem die Anwendung lauscht (Standard: 8080)
+
+
+# --------------------------------------------------------------------------------------------------------------------
+# Profil-spezifische Konfiguration:
+# Erstelle application-dev.yml und application-prod.yml
+# und aktiviere via --spring.profiles.active=dev/prod
+#
+# application-dev.yml:
+# spring:
+#   jpa.hibernate.ddl-auto: create-drop  # frische DB bei jedem Start in Dev
+#
+# application-prod.yml:
+# spring:
+#   jpa.hibernate.ddl-auto: validate     # pr�ft nur Schema in Prod
+#   security.oauth2.resourceserver.jwt.issuer-uri: https://auth.mycompany.com/realm/streamplay
+# --------------------------------------------------------------------------------------------------------------------
