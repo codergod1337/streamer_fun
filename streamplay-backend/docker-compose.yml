@@ -24,7 +24,7 @@ services:                           # Definition aller Container-Services
       POSTGRES_PASSWORD: 123
     ports:                          # Port-Mapping zwischen Host und Container
       - "5432:5432"                 # Host-Port 5432 → Container-Port 5432
-    volumes:                        # Persistente Speicherung der Daten
+#    volumes:                        # Persistente Speicherung der Daten
       # ---------------------------- Bind-Mount Erklärung ----------------------------
       # Host-Verzeichnis "./data/postgres":
       #   • Alle Postgres-Daten (WAL, Tabellen, Indizes, Konfiguration) landen hier
@@ -38,10 +38,10 @@ services:                           # Definition aller Container-Services
       # Zusammen sorgt dieser Bind-Mount dafür, dass die Datenbankdaten
       # außerhalb des Container-Scopes auf deinem Host liegen und somit
       # zwischen Container-Neustarts erhalten bleiben und reproduzierbar sind.
-      - ./data/postgres:/var/lib/postgresql/data
+#      - ./data/postgres:/var/lib/postgresql/data
 
-volumes:
-  db-data:
+#volumes:
+#  db-data:
 
 
 # command to init container:
