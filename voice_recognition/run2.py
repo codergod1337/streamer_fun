@@ -9,6 +9,8 @@ Features:
 - Prints recognized text with detected language in parentheses.
 - Configurable Whisper settings for maximum flexibility.
 """
+# DOWNLOAD https://git-scm.com/downloads/win
+# DOWNLOAD: https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe
 # pip install torch==2.5.1+cu121 torchvision==0.20.1+cu121 torchaudio==2.5.1+cu121 --index-url https://download.pytorch.org/whl/cu121
 # pip install openai-whisper sounddevice numpy librosa requests
 
