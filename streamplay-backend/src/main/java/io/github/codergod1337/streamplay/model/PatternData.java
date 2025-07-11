@@ -37,5 +37,6 @@ public class PatternData {
     @JoinColumn(name = "event_id", nullable = false)
     private PlayableEvent playableEvent;
 
+    @Builder.Default
     private boolean isCalled = false;
 }
