@@ -1,0 +1,12 @@
+FROM node:20-alpine
+
+# Create app dir
+WORKDIR /app
+
+# Copy only package info first for caching
+COPY package.json package-lock.json* ./
+
+# Install dependencies
+RUN npm install
+
+# Rest wird per volume reingemountet

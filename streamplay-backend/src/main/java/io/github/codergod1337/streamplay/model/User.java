@@ -3,6 +3,7 @@ package io.github.codergod1337.streamplay.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -23,7 +24,7 @@ public class User {
 
     @NotBlank
     @Column(nullable = false)
-    private String password;           // gehashtes Passwort
+    private String password;           // TODO: gehashtes Passwort
 
     @Column(name = "points_account")
     private Long pointsAccount = 0L; // Punktekonto des Users

@@ -14,6 +14,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -73,7 +74,7 @@ public class AuthService {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("streamplay-backend")
                 .issuedAt(now)
-                .expiresAt(now.plusSeconds(3600))
+                .expiresAt(now.plusSeconds(36000000)) // TODO: zeit wieder kürzen!
                 .subject(username)
                 .claim("userId", user.getId())
                 .claim("userName", user.getUserName())
@@ -90,6 +91,15 @@ public class AuthService {
         //return jwtEncoder.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).keyId("streamplay-hs256").build(), claims)).getTokenValue();
         //return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
+
+    public List<String> getUserGroupsFromToken(String token) {
+        var jwt = jwtDecoder.decode(token);
+        var groups = jwt.getClaimAsStringList("userGroups");
+        return groups != null ? groups : Collections.emptyList();
+    }
+
+
+
 
     // Weitere Helfer: extractUsername, extractExpiration, validateToken, etc.
 }

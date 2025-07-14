@@ -6,15 +6,17 @@ import io.github.codergod1337.streamplay.model.User;
 import io.github.codergod1337.streamplay.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/user")
 @Validated
 public class UserController {
 
@@ -25,10 +27,18 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping
+    @PostMapping("/fulluser")
     public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
         User created = userService.create(user);
         return ResponseEntity.ok(created);
+    }
+    @PostMapping
+    public ResponseEntity<User> createUserByUserName(@RequestHeader(value = "Authorization", required = false) String authHeader,  @RequestBody Map<String,String> body) {
+        // TODO: Auth Requester!!!
+        if (body.get("userName").isEmpty() || userService.usernameExists(body.get("userName"))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        return ResponseEntity.ok(userService.createUserByUserName(body.get("userName")));
     }
 
     @GetMapping("/{id}")

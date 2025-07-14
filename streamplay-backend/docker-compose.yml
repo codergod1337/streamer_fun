@@ -24,24 +24,24 @@ services:                           # Definition aller Container-Services
       POSTGRES_PASSWORD: 123
     ports:                          # Port-Mapping zwischen Host und Container
       - "5432:5432"                 # Host-Port 5432 → Container-Port 5432
-#    volumes:                        # Persistente Speicherung der Daten
-      # ---------------------------- Bind-Mount Erklärung ----------------------------
-      # Host-Verzeichnis "./data/postgres":
-      #   • Alle Postgres-Daten (WAL, Tabellen, Indizes, Konfiguration) landen hier
-      #   • Leicht einsehbar und versionierbar (z. B. nur Migrationsskripte, nicht die Binärdaten)
-      #   • Jeder, der das Repo klont, kann direkt mit exakt demselben Daten-Verzeichnis arbeiten
-      #
-      # Container-Pfad "/var/lib/postgresql/data":
-      #   • Standard-Datenverzeichnis von PostgreSQL im Container
-      #   • Postgres erwartet hier Schreibrechte und legt hier alle DB-Dateien an
-      #
-      # Zusammen sorgt dieser Bind-Mount dafür, dass die Datenbankdaten
-      # außerhalb des Container-Scopes auf deinem Host liegen und somit
-      # zwischen Container-Neustarts erhalten bleiben und reproduzierbar sind.
-#      - ./data/postgres:/var/lib/postgresql/data
 
-#volumes:
-#  db-data:
+#  nginx:
+#    build: ./nginx
+#    container_name: streamplay-nginx
+#    ports:
+#      - "80:80"  # Zugriff über http://localhost:6969
+
+#  frontend:
+#    build:
+#      context: ../streamplay-frontend
+#      dockerfile: Dockerfile.dev
+#    container_name: streamplay-frontend
+#    ports:
+#      - "5000:5000"  # Vite Dev-Server erreichbar unter localhost:5000
+#    volumes:
+#      - ./streamplay-frontend:/app  # Für Hot Reload
+#      - /app/node_modules           # Verhindert Konflikte mit Host
+
 
 
 # command to init container:
