@@ -69,7 +69,7 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/webjars/**",
                                 "/api/auth/**",
-                                "/api/jwt",  // LOGIN
+                                "/jwt",  // LOGIN
                                 "/**"  // TEMPORÄR
                         ).permitAll()
                         .anyRequest().authenticated()

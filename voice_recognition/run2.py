@@ -14,9 +14,9 @@ Features:
 # pip install torch==2.5.1+cu121 torchvision==0.20.1+cu121 torchaudio==2.5.1+cu121 --index-url https://download.pytorch.org/whl/cu121
 # pip install openai-whisper sounddevice numpy librosa requests
 
-
 import os
 import sys
+import json  # für persistenten State
 import whisper
 import sounddevice as sd
 import numpy as np
@@ -28,15 +28,33 @@ except ImportError:
 import torch, torchvision, torchaudio
 import requests
 
+# Datei für persistenten Log (Counter und Transkripte)
+LOG_FILE = "log.json"
+
+
+def load_state(file_path):
+    """Lädt Counter und Transkripte aus LOG_FILE oder initialisiert sie."""
+    if os.path.isfile(file_path):
+        with open(file_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    else:
+        return {"lauf": 0, "transcripts": []}
+
+
+def save_state(state, file_path):
+    """Speichert Counter und Transkripte in LOG_FILE."""
+    with open(file_path, 'w', encoding='utf-8') as f:
+        json.dump(state, f, ensure_ascii=False, indent=2)
+
 
 def _check_cuda():
     """
     Prüft, ob CUDA verfügbar ist und gibt Versionen aus.
     """
-    print("CUDA verfügbar:", torch.cuda.is_available())            # True, wenn GPU genutzt wird
-    print("Torch CUDA-Version:", torch.version.cuda)              # z.B. "12.1"
-    print("Torchvision-Version:", torchvision.__version__)       # z.B. "0.17.0+cu121"
-    print("Torchaudio-Version:", torchaudio.__version__)         # z.B. "2.2.0+cu121"
+    print("CUDA verfügbar:", torch.cuda.is_available())
+    print("Torch CUDA-Version:", torch.version.cuda)
+    print("Torchvision-Version:", torchvision.__version__)
+    print("Torchaudio-Version:", torchaudio.__version__)
 
 
 def list_input_devices():
@@ -122,6 +140,11 @@ def transcribe_buffer(
 def main():
     _check_cuda()
 
+    # Zustand laden und Counter initialisieren
+    state = load_state(LOG_FILE)
+    lauf = state['lauf']
+    print(f"State geladen: lauf={lauf}, Einträge={len(state['transcripts'])}")
+
     # Modell-Auswahl
     available_models = [
         ("tiny",  "39M parameters, ~1 GB VRAM"),
@@ -169,6 +192,7 @@ def main():
 
     try:
         while True:
+            # Aufnahme
             num_frames = int(default_sr * CHUNK_DURATION)
             audio = sd.rec(frames=num_frames,
                            samplerate=default_sr,
@@ -178,6 +202,7 @@ def main():
             sd.wait()
             audio = np.squeeze(audio)
 
+            # Transkription
             result = transcribe_buffer(
                 model=model,
                 audio_buffer=audio,
@@ -188,23 +213,34 @@ def main():
             #lang = result.get("language", "unknown")
             #print(f"{text} ({lang})")
             print(f"{text}")
-            #send_to_backend(text)
-                   
+
+            # State aktualisieren und speichern
+            lauf += 1
+            state['lauf'] = lauf
+            state['transcripts'].append({
+                'id': lauf,
+                'text': text
+            })
+            save_state(state, LOG_FILE)
+
+            # Unverändertes Weiterleiten ans Backend
+            send_to_backend(text)
+
     except KeyboardInterrupt:
         print("\nTranscription stopped by user. Exiting.")
         sys.exit(0)
-        
+
+
 def send_to_backend(text):
-        
-    #for word in text.split():      # Sende jedes einzelne Wort separat per POST an das Backend
+    # für jedes Wort einzeln senden, falls gewünscht
     try:
         requests.post(
             url="http://localhost:6969/api/rawdata/text",
             json={"value": text},
             timeout=0.5
-            )
+        )
     except Exception:
-        pass     
+        pass
 
 if __name__ == "__main__":
     main()
